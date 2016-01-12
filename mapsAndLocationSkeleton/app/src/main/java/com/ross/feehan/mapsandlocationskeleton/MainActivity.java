@@ -4,6 +4,8 @@ import android.content.Context;
 import android.location.Location;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -17,20 +19,29 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener {
+        LocationListener, GetAddressInterface {
 
     private Context ctx;
     private GoogleApiClient googleApiClient;
     private GoogleMap map;
+    private GetAddress getAddress;
+    @Bind(R.id.pickupAddressTV) TextView pickupAddressTV;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        this.ctx = this;
+        ButterKnife.bind(this);
+
+        getAddress = new GetAddress(ctx);
         setUpMapAndStartLocationFinding();
     }
 
@@ -92,6 +103,8 @@ public class MainActivity extends AppCompatActivity implements
         LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, createLocationRequest(), this);
 
         displayUsersLocationOnMap(LocationServices.FusedLocationApi.getLastLocation(googleApiClient));
+
+        getAddress.getAddress(LocationServices.FusedLocationApi.getLastLocation(googleApiClient), this);
     }
 
     @Override
@@ -126,5 +139,17 @@ public class MainActivity extends AppCompatActivity implements
     public void onDestroy(){
         super.onDestroy();
         googleApiClient.disconnect();
+    }
+
+    //GetAddressInterface METHODS
+    @Override
+    public void addressFromLatAndLong(String address) {
+        pickupAddressTV.setText(address);
+    }
+
+
+    @Override
+    public void noInternet() {
+        Toast.makeText(ctx, "Sorry, no internet access at the moment", Toast.LENGTH_LONG).show();
     }
 }
